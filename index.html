@@ -743,8 +743,11 @@
 
       try {
         const fd = new FormData(form);
-        // Don't send an empty file field — Web3Forms rejects the malformed multipart body
-        if (!input.files.length) fd.delete('skisser');
+        // Web3Forms free plan rejects file uploads — strip the binary and send filename as text instead
+        fd.delete('skisser');
+        if (input.files.length) {
+          fd.append('skiss_filnamn', input.files[0].name);
+        }
 
         const res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
