@@ -566,6 +566,7 @@
       <form id="contactForm">
         <input type="hidden" name="access_key" value="62de1546-afe3-4610-860e-ad55e4b4eef1">
         <input type="hidden" name="subject"    value="Ny bygglovsförfrågan — bob">
+        <input type="hidden" name="redirect"   value="false">
         <!-- honeypot: bots fill this, humans leave it blank -->
         <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
 
@@ -741,9 +742,13 @@
       feedback.className = 'form-feedback';
 
       try {
+        const fd = new FormData(form);
+        // Don't send an empty file field — Web3Forms rejects the malformed multipart body
+        if (!input.files.length) fd.delete('skisser');
+
         const res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
-          body: new FormData(form)
+          body: fd
           // No Content-Type header — browser sets multipart/form-data with boundary
         });
 
@@ -755,6 +760,9 @@
           form.reset();
           label.textContent = 'Bifoga dina skisser';
           label.style.color = '';
+          fileError.textContent = '';
+          fileError.classList.remove('visible');
+          zone.style.borderColor = '';
         } else {
           feedback.textContent = 'Något gick fel. Försök igen eller kontakta oss direkt.';
           feedback.classList.add('visible', 'error');
