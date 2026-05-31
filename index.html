@@ -438,6 +438,45 @@
     /* ══════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════ */
+    /* ══════════════════════════════════
+       FORM FEEDBACK
+    ══════════════════════════════════ */
+    .file-error {
+      font-size: 12px;
+      color: #a02020;
+      margin-top: 6px;
+      padding-left: 2px;
+      display: none;
+    }
+    .file-error.visible { display: block; }
+
+    .form-feedback {
+      margin-top: 20px;
+      padding: 14px 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+    .form-feedback.visible { display: block; }
+    .form-feedback.success {
+      background: rgba(92,26,26,0.07);
+      color: var(--burgundy);
+      border: 1px solid rgba(92,26,26,0.18);
+    }
+    .form-feedback.error {
+      background: rgba(160,32,32,0.07);
+      color: #a02020;
+      border: 1px solid rgba(160,32,32,0.18);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     @media (max-width: 640px) {
       nav               { padding: 14px 20px; }
       .nav-link         { font-size: 8px; letter-spacing: 0.1em; }
@@ -524,16 +563,11 @@
     </div>
 
     <div class="form-wrapper">
-      <form
-        id="contactForm"
-        action="https://formsubmit.co/erik.t.pettersson@gmail.com"
-        method="POST"
-        enctype="multipart/form-data"
-      >
-        <input type="hidden" name="_subject"      value="Ny bygglovsförfrågan — bob">
-        <input type="hidden" name="_captcha"      value="false">
-        <input type="hidden" name="_template"     value="table">
-        <input type="hidden" name="_autoresponse" value="Tack för din förfrågan! Vi återkommer inom 24 timmar. / bob bygglovsformuläret">
+      <form id="contactForm">
+        <input type="hidden" name="access_key" value="62de1546-afe3-4610-860e-ad55e4b4eef1">
+        <input type="hidden" name="subject"    value="Ny bygglovsförfrågan — bob">
+        <!-- honeypot: bots fill this, humans leave it blank -->
+        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
 
         <div class="form-field reveal">
           <input
@@ -579,6 +613,7 @@
             </span>
           </div>
           <div class="upload-filenames" id="fileNames"></div>
+          <div class="file-error" id="fileError"></div>
         </div>
 
         <div class="form-row reveal">
@@ -602,6 +637,8 @@
         <div class="form-submit reveal">
           <button type="submit" class="btn-submit">Skicka dina svar</button>
         </div>
+
+        <div class="form-feedback" id="formFeedback"></div>
       </form>
     </div>
 
@@ -630,9 +667,11 @@
     }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-    const zone  = document.getElementById('uploadZone');
-    const input = document.getElementById('fileInput');
-    const label = document.getElementById('uploadLabel');
+    // ── File upload UI ──
+    const zone      = document.getElementById('uploadZone');
+    const input     = document.getElementById('fileInput');
+    const label     = document.getElementById('uploadLabel');
+    const fileError = document.getElementById('fileError');
 
     zone.addEventListener('click', () => input.click());
     input.addEventListener('change', showFiles);
@@ -646,10 +685,33 @@
       showFiles();
     });
 
+    function validateFiles(files) {
+      if (files.length > 1) {
+        return 'Du kan bara bifoga en fil åt gången. Ta bort extra filer och försök igen.';
+      }
+      if (files.length === 1 && files[0].size > 5 * 1024 * 1024) {
+        return 'Filen är för stor — max 5 MB tillåtet. Komprimera filen och försök igen.';
+      }
+      return null;
+    }
+
     function showFiles() {
       const files = Array.from(input.files);
+      const err = validateFiles(files);
+      if (err) {
+        fileError.textContent = err;
+        fileError.classList.add('visible');
+        zone.style.borderColor = '#a02020';
+        label.textContent = 'Bifoga dina skisser';
+        label.style.color = '';
+        input.value = '';
+        return;
+      }
+      fileError.textContent = '';
+      fileError.classList.remove('visible');
+      zone.style.borderColor = '';
       if (files.length) {
-        label.textContent = files.map(f => f.name).join(', ');
+        label.textContent = files[0].name;
         label.style.color = 'var(--text)';
       } else {
         label.textContent = 'Bifoga dina skisser';
@@ -657,6 +719,56 @@
       }
     }
 
+    // ── Form submission via fetch ──
+    const form     = document.getElementById('contactForm');
+    const feedback = document.getElementById('formFeedback');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const files = Array.from(input.files);
+      const err = validateFiles(files);
+      if (err) {
+        fileError.textContent = err;
+        fileError.classList.add('visible');
+        zone.style.borderColor = '#a02020';
+        return;
+      }
+
+      const btn = form.querySelector('.btn-submit');
+      btn.disabled = true;
+      btn.textContent = 'Skickar…';
+      feedback.className = 'form-feedback';
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form)
+          // No Content-Type header — browser sets multipart/form-data with boundary
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          feedback.textContent = 'Tack! Vi återkommer inom 24 timmar.';
+          feedback.classList.add('visible', 'success');
+          form.reset();
+          label.textContent = 'Bifoga dina skisser';
+          label.style.color = '';
+        } else {
+          feedback.textContent = 'Något gick fel. Försök igen eller kontakta oss direkt.';
+          feedback.classList.add('visible', 'error');
+        }
+      } catch {
+        feedback.textContent = 'Kunde inte skicka formuläret. Kontrollera din internetanslutning och försök igen.';
+        feedback.classList.add('visible', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Skicka dina svar';
+      }
+    });
+
+    // ── Smooth scroll ──
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
         const t = document.querySelector(a.getAttribute('href'));
