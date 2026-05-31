@@ -748,8 +748,9 @@
 
         const res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
+          headers: { 'Accept': 'application/json' },
           body: fd
-          // No Content-Type header — browser sets multipart/form-data with boundary
+          // No Content-Type — browser sets multipart/form-data with boundary
         });
 
         const data = await res.json();
