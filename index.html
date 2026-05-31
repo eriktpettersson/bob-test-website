@@ -755,7 +755,9 @@
 
         const data = await res.json();
 
-        if (data.success) {
+        console.log('Web3Forms response:', data);
+
+        if (data.success || data.result === 'success') {
           feedback.textContent = 'Tack! Vi återkommer inom 24 timmar.';
           feedback.classList.add('visible', 'success');
           form.reset();
@@ -765,10 +767,12 @@
           fileError.classList.remove('visible');
           zone.style.borderColor = '';
         } else {
-          feedback.textContent = 'Något gick fel. Försök igen eller kontakta oss direkt.';
+          const reason = data.message || (data.body && data.body.message) || '';
+          feedback.textContent = 'Något gick fel' + (reason ? ': ' + reason : '. Försök igen eller kontakta oss direkt.');
           feedback.classList.add('visible', 'error');
         }
-      } catch {
+      } catch (err) {
+        console.error('Fetch error:', err);
         feedback.textContent = 'Kunde inte skicka formuläret. Kontrollera din internetanslutning och försök igen.';
         feedback.classList.add('visible', 'error');
       } finally {
