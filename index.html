@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bob — Bygglovsformuläret</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --cream:      #F1EEED;
+      --burgundy:   #5C1A1A;
+      --burg-alpha: rgba(92,26,26,0.08);
+      --text:       #1C0E0E;
+      --text-mid:   #7A5252;
+      --white:      #FFFFFF;
+      --border:     rgba(92,26,26,0.11);
+      --input-bg:   rgba(200,180,165,0.12);
+      --shadow:     rgba(92,26,26,0.07);
+      --card-shadow: 0 2px 16px rgba(92,26,26,0.07), 0 8px 40px rgba(92,26,26,0.04);
+      --card-width:  960px;
+      --footer:     #180A0A;
+      --t:          cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      position: relative;
+      background-color: var(--cream);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── Background icon layer ── */
+    .bg-icons {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bgi {
+      position: absolute;
+      user-select: none;
+      opacity: 0.55;
+    }
+    /* cross-grid: upper-left hero area */
+    .bgi-1a { width: 230px; top: 110px;  left: -25px; }
+    /* network:   upper-right hero area */
+    .bgi-3a { width: 210px; top:  90px;  right: -20px; }
+    /* building:  right side between hero & pricing */
+    .bgi-2a { width: 290px; top: 490px;  right:  55px; }
+    /* cross-grid: left side of pricing section */
+    .bgi-1b { width: 195px; top: 660px;  left:  25px; }
+    /* network:   right side of form section */
+    .bgi-3b { width: 225px; top: 980px;  right:  40px; }
+    /* building:  left side of form section */
+    .bgi-2b { width: 275px; top: 1220px; left:   50px; }
+    /* cross-grid: lower-right near footer */
+    .bgi-1c { width: 185px; top: 1570px; right:  20px; }
+
+    /* ══════════════════════════════════
+       NAV
+    ══════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 56px;
+      background: rgba(241,238,237,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-link {
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      text-decoration: none;
+      transition: color 0.25s;
+    }
+    .nav-link:hover { color: var(--burgundy); }
+
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      line-height: 1;
+    }
+    .nav-logo-text {
+      font-family: 'Bona Nova', serif;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* ══════════════════════════════════
+       HERO
+    ══════════════════════════════════ */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 64px 32px 64px;
+    }
+
+    .hero-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      padding: 120px 80px 112px;
+      max-width: var(--card-width);
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 400;
+      line-height: 1.18;
+      color: var(--text);
+    }
+    body.js-loaded .hero-headline {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: fadeUp 0.7s var(--t) forwards 0.1s;
+    }
+    .hero-headline em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--burgundy);
+    }
+
+    /* ══════════════════════════════════
+       PRICING
+    ══════════════════════════════════ */
+    .pricing {
+      position: relative;
+      z-index: 1;
+      padding: 0 32px 64px;
+    }
+
+    .pricing-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      padding: 48px 80px 52px;
+      max-width: var(--card-width);
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 400;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: 40px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .price-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px 24px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s var(--t), box-shadow 0.4s var(--t), border-color 0.25s;
+    }
+    .price-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--burgundy);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s var(--t);
+    }
+    .price-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 48px var(--shadow);
+      border-color: rgba(92,26,26,0.20);
+    }
+    .price-card:hover::after { transform: scaleX(1); }
+
+    .price-range {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .price-amount {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--burgundy);
+    }
+
+    /* ══════════════════════════════════
+       FORM SECTION
+    ══════════════════════════════════ */
+    .form-section {
+      position: relative;
+      z-index: 1;
+      padding: 64px 32px 100px;
+    }
+
+    .form-intro-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      padding: 40px 80px;
+      max-width: var(--card-width);
+      margin: 0 auto 40px;
+      text-align: center;
+    }
+    .form-intro-card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(22px, 3vw, 36px);
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    .form-intro-card p {
+      font-size: 17px;
+      color: var(--text-mid);
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .form-wrapper {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* Field rows */
+    .form-field {
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .form-field input,
+    .form-field textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid rgba(92,26,26,0.15);
+      border-radius: 4px;
+      padding: 11px 16px;
+      font-family: 'Jost', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .form-field input::placeholder,
+    .form-field textarea::placeholder {
+      color: var(--text-mid);
+      font-size: 13px;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus {
+      border-color: var(--burgundy);
+      background: rgba(200,180,165,0.18);
+    }
+
+    .form-field textarea {
+      resize: none;
+      height: 120px;
+      line-height: 1.7;
+    }
+
+    /* File upload row */
+    .upload-row {
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid rgba(92,26,26,0.15);
+      border-radius: 4px;
+      padding: 11px 16px;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s;
+      gap: 10px;
+    }
+    .upload-row:hover {
+      border-color: var(--burgundy);
+      background: rgba(200,180,165,0.2);
+    }
+    .upload-row input[type="file"] { display: none; }
+    .upload-row .upload-label {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-mid);
+      flex: 1;
+    }
+    .upload-row .upload-icon {
+      color: var(--text-mid);
+      flex-shrink: 0;
+      line-height: 0;
+    }
+    .upload-filenames {
+      font-size: 11.5px;
+      color: var(--burgundy);
+      margin-top: 6px;
+      padding-left: 2px;
+    }
+
+    /* Two-column row */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Submit */
+    .form-submit {
+      text-align: center;
+      margin-top: 28px;
+    }
+
+    .btn-submit {
+      display: inline-block;
+      padding: 13px 48px;
+      background: var(--burgundy);
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s var(--t), box-shadow 0.35s var(--t);
+    }
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      transform: translateX(-101%);
+      transition: transform 0.45s var(--t);
+    }
+    .btn-submit:hover::after  { transform: translateX(0); }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 36px rgba(92,26,26,0.28);
+    }
+
+    /* ══════════════════════════════════
+       FOOTER
+    ══════════════════════════════════ */
+    footer {
+      position: relative;
+      z-index: 1;
+      background: var(--footer);
+      padding: 60px 40px 48px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      margin-bottom: 36px;
+      line-height: 0;
+    }
+    .footer-logo img {
+      height: 24px;
+      width: auto;
+      opacity: 0.35;
+      filter: brightness(0) invert(1);
+    }
+
+    .footer-nav {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .footer-link {
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      color: rgba(245,240,235,0.45);
+      text-decoration: none;
+      transition: color 0.25s;
+    }
+    .footer-link:hover { color: rgba(245,240,235,0.85); }
+
+    /* ══════════════════════════════════
+       SCROLL REVEALS
+    ══════════════════════════════════ */
+    body.js-loaded .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.75s var(--t), transform 0.75s var(--t);
+    }
+    body.js-loaded .reveal.in { opacity: 1; transform: translateY(0); }
+    body.js-loaded .d1 { transition-delay: 0.10s; }
+    body.js-loaded .d2 { transition-delay: 0.20s; }
+    body.js-loaded .d3 { transition-delay: 0.30s; }
+
+    /* ══════════════════════════════════
+       KEYFRAMES
+    ══════════════════════════════════ */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════ */
+    @media (max-width: 640px) {
+      nav               { padding: 14px 20px; }
+      .nav-link         { font-size: 8px; letter-spacing: 0.1em; }
+      .hero             { padding: 32px 16px 32px; }
+      .hero-card        { padding: 48px 24px 40px; }
+      .pricing          { padding: 0 16px 32px; }
+      .pricing-card     { padding: 32px 16px 36px; }
+      .pricing-grid     { gap: 8px; }
+      .price-card       { padding: 20px 8px 16px; }
+      .price-range      { font-size: 14px; margin-bottom: 8px; }
+      .price-amount     { font-size: 18px; }
+      .form-section     { padding: 32px 16px 68px; }
+      .form-intro-card  { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════ BACKGROUND ICONS ══════════ -->
+  <div class="bg-icons" aria-hidden="true">
+    <img src="background%20icon%201.png" class="bgi bgi-1a" alt="">
+    <img src="background%20icon%203.png" class="bgi bgi-3a" alt="">
+    <img src="background%20icon%202.png" class="bgi bgi-2a" alt="">
+    <img src="background%20icon%201.png" class="bgi bgi-1b" alt="">
+    <img src="background%20icon%203.png" class="bgi bgi-3b" alt="">
+    <img src="background%20icon%202.png" class="bgi bgi-2b" alt="">
+    <img src="background%20icon%201.png" class="bgi bgi-1c" alt="">
+  </div>
+
+  <!-- ══════════ NAV ══════════ -->
+  <nav>
+    <a href="#formularet" class="nav-link">Bygglovsformuläret</a>
+
+    <div class="nav-logo">
+      <span class="nav-logo-text">BOB</span>
+    </div>
+
+    <a href="https://www.instagram.com" class="nav-link" target="_blank" rel="noopener noreferrer">
+      Instagram&nbsp;↗
+    </a>
+  </nav>
+
+
+  <!-- ══════════ HERO ══════════ -->
+  <section class="hero">
+    <div class="hero-card">
+      <h1 class="hero-headline">
+        Bygglov för <em>ditt projekt</em><br>
+        snabbt och korrekt till fast pris
+      </h1>
+    </div>
+  </section>
+
+
+  <!-- ══════════ PRICING ══════════ -->
+  <section class="pricing" id="priser">
+    <div class="pricing-card">
+      <h2 class="section-title reveal">Priser</h2>
+
+      <div class="pricing-grid">
+        <div class="price-card reveal d1">
+          <div class="price-range">1–25 kvm</div>
+          <div class="price-amount">3 800 kr</div>
+        </div>
+        <div class="price-card reveal d2">
+          <div class="price-range">26–70 kvm</div>
+          <div class="price-amount">5 800 kr</div>
+        </div>
+        <div class="price-card reveal d3">
+          <div class="price-range">71–150 kvm</div>
+          <div class="price-amount">8 800 kr</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ FORM ══════════ -->
+  <section class="form-section" id="formularet">
+
+    <div class="form-intro-card reveal">
+      <h2>Behöver du bygglovsritningar?</h2>
+      <p>Fyll i formuläret, få återkoppling redan nästa dag!</p>
+    </div>
+
+    <div class="form-wrapper">
+      <form
+        id="contactForm"
+        action="https://formsubmit.co/erik.t.pettersson@gmail.com"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <input type="hidden" name="_subject"      value="Ny bygglovsförfrågan — bob">
+        <input type="hidden" name="_captcha"      value="false">
+        <input type="hidden" name="_template"     value="table">
+        <input type="hidden" name="_autoresponse" value="Tack för din förfrågan! Vi återkommer inom 24 timmar. / bob bygglovsformuläret">
+
+        <div class="form-field reveal">
+          <input
+            type="text"
+            name="typ_av_byggnad"
+            placeholder="Typ av byggnad"
+            required
+          >
+        </div>
+
+        <div class="form-field reveal d1">
+          <input
+            type="number"
+            name="kvadratmeter"
+            placeholder="Kvadratmeter"
+            min="1"
+            required
+          >
+        </div>
+
+        <div class="form-field reveal d2">
+          <textarea
+            name="projektbeskrivning"
+            placeholder="Beskriv ditt projekt…"
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-field reveal d3">
+          <div class="upload-row" id="uploadZone">
+            <input
+              type="file"
+              id="fileInput"
+              name="skisser"
+              accept="image/*,.pdf,.dwg"
+              multiple
+            >
+            <span class="upload-label" id="uploadLabel">Bifoga dina skisser</span>
+            <span class="upload-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </span>
+          </div>
+          <div class="upload-filenames" id="fileNames"></div>
+        </div>
+
+        <div class="form-row reveal">
+          <div class="form-field" style="margin-bottom:0">
+            <input
+              type="email"
+              name="epost"
+              placeholder="E-post"
+              required
+            >
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <input
+              type="tel"
+              name="telefon"
+              placeholder="Telefon"
+            >
+          </div>
+        </div>
+
+        <div class="form-submit reveal">
+          <button type="submit" class="btn-submit">Skicka dina svar</button>
+        </div>
+      </form>
+    </div>
+
+  </section>
+
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer>
+    <div class="footer-nav">
+      <a href="mailto:info@bob.se"                                          class="footer-link">epost</a>
+      <a href="tel:+460000000000"                                           class="footer-link">telefon</a>
+      <a href="https://www.instagram.com" target="_blank" rel="noopener"   class="footer-link">instagram</a>
+      <a href="https://www.linkedin.com"  target="_blank" rel="noopener"   class="footer-link">linkedin</a>
+    </div>
+  </footer>
+
+
+  <!-- ══════════ SCRIPTS ══════════ -->
+  <script>
+    document.body.classList.add('js-loaded');
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    const zone  = document.getElementById('uploadZone');
+    const input = document.getElementById('fileInput');
+    const label = document.getElementById('uploadLabel');
+
+    zone.addEventListener('click', () => input.click());
+    input.addEventListener('change', showFiles);
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--burgundy)'; });
+    zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.style.borderColor = '';
+      input.files = e.dataTransfer.files;
+      showFiles();
+    });
+
+    function showFiles() {
+      const files = Array.from(input.files);
+      if (files.length) {
+        label.textContent = files.map(f => f.name).join(', ');
+        label.style.color = 'var(--text)';
+      } else {
+        label.textContent = 'Bifoga dina skisser';
+        label.style.color = '';
+      }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const t = document.querySelector(a.getAttribute('href'));
+        if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    });
+  </script>
+
+</body>
+</html>
